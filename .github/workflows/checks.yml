@@ -1,0 +1,22 @@
+name: Checks
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Unit and CLI tests
+        run: make test
+      - name: Build container
+        run: docker build -t linux-lab .
+      - name: Run as an unprivileged process
+        run: docker run --rm --read-only --network none --cap-drop ALL linux-lab --json
